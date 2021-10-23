@@ -25,7 +25,8 @@ class Profiler():
     time_array.append( datetime.datetime.now().microsecond )
     input_args_str = str(args)
     obj = {} # for 'other' data from tests within test chain
-    hide_data = False
+    hide_data = True
+
     for i in range(n):
       time_array.append( datetime.datetime.now().microsecond )
       result = str(functor(*args, obj)) # call
@@ -42,9 +43,8 @@ class Profiler():
     # self.test_gen(1,SubClass().sort_number_list, test_data[: :], 3)
     # self.test_gen(1,SubClass().sort_number_list, [test_data[: :]], 4)
     # self.test_gen(1,SubClass().sort_number_list, [test_data[: :]], 5)
-    self.test_gen(1,SubClass().sort_number_list, [7, 3, 2, 16, 24, 4, 11, 9], 5)
-    self.test_gen(1,SubClass().sort_number_list, [7, 3, 2, 16, 24, 4, 11, 9], 6)
-
-
+    # self.test_gen(1,SubClass().sort_number_list, [7, 3, 2, 16, 24, 4, 11, 9], 5)
+    self.test_gen(1,SubClass().sort_number_list, test_data[: :], 5)
+    self.test_gen(1,SubClass().sort_number_list, test_data[: :], 6)
 
 Profiler().test()
