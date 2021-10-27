@@ -1,7 +1,8 @@
+import pdb
 import random
 import numpy as np
 from typing import List
-from math import ceil
+from math import ceil, floor
 
 import documentation_ as doc
 
@@ -77,6 +78,12 @@ class SubClass(SuperClass):
     return sum_result
 
   def sort_number_list(self, collection: List[int], option: int, obj: object) -> List[int]:
+    pdb.set_trace()
+    # type check
+    if isinstance(option, (int, float)) and isinstance(obj, dict):
+      option = int(option)
+    else:
+      raise(Exception('Invalid option'))
     # selection sort method (liken to CASE STATEMENT )
     sort_func_selector = [
       bubble_sort,

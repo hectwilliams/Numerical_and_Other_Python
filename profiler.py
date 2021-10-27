@@ -1,5 +1,6 @@
 import random
 import datetime
+import time
 from typing import Any
 
 from Inhertiance_Encapsulation_Polymorphism import SubClass
@@ -26,13 +27,16 @@ class Profiler():
     input_args_str = str(args)
     obj = {} # for 'other' data from tests within test chain
     hide_data = True
-
+    start_time = end_time = 0
     for i in range(n):
-      time_array.append( datetime.datetime.now().microsecond )
+      # time_array.append( datetime.datetime.now().microsecond )
+      start_time =  time.time_ns()
       result = str(functor(*args, obj)) # call
-      time_array[-1] = datetime.datetime.now().microsecond - time_array[-1]
-      print('{4}\nFunctionName = {0} \nTimeElapsed = {3} ms\nInput(i.e. args) = {1}\n Result = {2} \n{4}'.format( str(obj.get('name')) , 'hidden' if hide_data else  input_args_str   ,'hidden' if hide_data else str(result), time_array[-1] / 10e3 , ("--"*100) + '\n' ))
-    time_array[0] = datetime.datetime.now().microsecond - time_array[0]
+      end_time  =  time.time_ns()
+      print('{2}\nFunctionName = {0} \nTimeElapsed = {1} ms\n{2}'.format( str(obj.get('name')) , ( end_time - start_time) / 10e6 , ("--"*100) + '\n' ))
+
+      # print('{4}\nFunctionName = {0} \nTimeElapsed = {3} ms\nInput(i.e. args) = {1}\n Result = {2} \n{4}'.format( str(obj.get('name')) , 'hidden' if hide_data else  input_args_str   ,'hidden' if hide_data else str(result), time_array[-1] / 10e3 , ("--"*100) + '\n' ))
+    # time_array[0] = datetime.datetime.now().microsecond - time_array[0]
 
   def test(self, N = 50):
     test_data = random.sample(range(0,10000), 10000)
@@ -44,6 +48,9 @@ class Profiler():
     # self.test_gen(1,SubClass().sort_number_list, [test_data[: :]], 4)
     # self.test_gen(1,SubClass().sort_number_list, [test_data[: :]], 5)
     # self.test_gen(1,SubClass().sort_number_list, [7, 3, 2, 16, 24, 4, 11, 9], 5)
+    self.test_gen(1,SubClass().sort_number_list, test_data[: :], 2)
+    self.test_gen(1,SubClass().sort_number_list, test_data[: :], 3)
+    self.test_gen(1,SubClass().sort_number_list, test_data[: :], 4)
     self.test_gen(1,SubClass().sort_number_list, test_data[: :], 5)
     self.test_gen(1,SubClass().sort_number_list, test_data[: :], 6)
 
