@@ -68,7 +68,6 @@ def plot_random_dots() -> None :
   y = np.random.random(20)
   z = np.random.random(20)
 
-  fig  = plt.figure(figsize = (10, 10))
   ax = plt.axes(projection = '3d')
   ax.grid()
 
@@ -122,23 +121,16 @@ def map_projection(mode : int = 0, ) -> None :
 
   # ax.stock_img() # debug only
   ax.gridlines(draw_labels=True)
-
   ax.add_feature(cfeature.LAND)
   ax.add_feature(cfeature.OCEAN)
   ax.add_feature(cfeature.BORDERS)
   ax.add_feature(cfeature.LAKES, alpha=0.7)
   ax.add_feature(cfeature.RIVERS)
   ax.add_feature(cfeature.STATES, linestyle='-')
-
-
   stanford_long, stanford_lat = -122.1661, 37.4241
-
   ax.set_extent([-122.8, -122, 37.3, 38.3]) # zoom map
-
   ax.plot(stanford_long, stanford_lat, color='red', linewidth=3, marker='o') # Standford University Marker
-
   ax.text(stanford_long+ 0.002, stanford_lat - 0.012, ' STANFORD') #  add text right (0.2) down(0.2)
-
   plt.show()
 
 if __name__ == '__main__':
