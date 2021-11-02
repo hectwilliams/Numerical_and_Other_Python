@@ -1,4 +1,5 @@
-import pdb
+import operator
+# import pdb
 import random
 import numpy as np
 from typing import List
@@ -52,8 +53,9 @@ class SuperClass():
   def mult (self, a, b) -> None:
     print(a*b)
 
-  def sort_number_list(self, collection: List[int], option: int = 0) -> List[int]:
+  def op_list(self, collection: List[int], option: int = 0) -> List[int]:
     raise NotImplementedError
+
 
 class SubClass(SuperClass):
 
@@ -77,15 +79,15 @@ class SubClass(SuperClass):
       sum_result = number + sum_result
     return sum_result
 
-  def sort_number_list(self, collection: List[int], option: int, obj: object) -> List[int]:
-    pdb.set_trace()
+  def op_list(self, collection: List[int], option: int, obj: object) -> List[int]:
+    # pdb.set_trace()
     # type check
     if isinstance(option, (int, float)) and isinstance(obj, dict):
       option = int(option)
     else:
       raise(Exception('Invalid option'))
     # selection sort method (liken to CASE STATEMENT )
-    sort_func_selector = [
+    func_selector = [
       bubble_sort,
       insertion_sort,
       selection_sort,
@@ -93,13 +95,13 @@ class SubClass(SuperClass):
       merge_sort,
       max_heap,
       min_heap,
+      determinant
     ][option] # immediate execution
 
     if type(obj) is dict:
-      obj['name'] = sort_func_selector.__name__
+      obj['name'] = func_selector.__name__
 
-    sort_func_selector(collection)
-
+    func_selector(collection)
     return collection
 
 if __name__ == '__main__':
@@ -268,3 +270,58 @@ def min_heap(collection: List):
     heapfiy(collection, i, False)
     #swap zeroth element with next available array slot in tail (i.e. array_length - 1 - i)
     swap(collection, 0, collection.__len__() - 1 - i)
+
+  for ele in (collection):
+    print(ele)
+
+# Matrix functions
+def is_square_matrix( *matrix ) -> bool :
+  column_len = 0
+  row_len = matrix.__len__()
+
+  #columns size  check
+  for i, array in enumerate(matrix):
+    if column_len == 0:
+      column_len = array.__len__()
+    elif column_len < array.__len__():
+      return True  # raise(TypeError('Not a sqaure matrix'))
+
+  # row size check  (square matrix permitted )
+  if row_len == column_len and column_len == 0:
+    return False  # raise(TypeError('Empty Array'))
+
+  return True
+
+def determinant( matrix ) -> None :
+  '''
+  checkerboard
+   + - + - ...
+   - + - + ...
+   + - + - ...
+   - + - + ...
+
+   sum of matrix xy position determines sign
+   (-) sign => sum(position_x + position_y) = odd
+   (+) sign => sum(position_x + position_y) = even
+  '''
+
+  k_factor = 1
+  scratch_pad_matrix = None
+  result = 0
+  n = matrix.__len__()
+
+  if n == 2:
+    result += matrix[0][0] * matrix[1][1] -  ( matrix[0][1] * matrix[1][0] ) # subtraction due to sign change above
+  else:
+    for reject_col  in range(n):
+      reject_row = 0
+      scratch_pad_matrix = []
+      for r in range(n):
+        for c in range(n):
+          if not (r == reject_row  or c == reject_col) :
+            if scratch_pad_matrix.__len__() <  r:
+              scratch_pad_matrix.append([])
+            scratch_pad_matrix[r % n - 1].append(matrix[r][c]) # mod sets new start index
+      k_factor = 1 if abs(reject_row - reject_col) % 2 == 0 else -1
+      result += k_factor * matrix[0][reject_col] * determinant(scratch_pad_matrix)
+  return result

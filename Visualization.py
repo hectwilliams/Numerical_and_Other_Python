@@ -1,10 +1,14 @@
 from typing import Callable
 import numpy as np
+import scipy.fftpack
 import matplotlib.pyplot as plt
 import cartopy.crs  as ccrs # cartopy coordinate reference system used for maps
 import cartopy.feature as cfeature
+
+
 plt.style.use('seaborn-dark-palette')
 
+# 2D plots
 def plot_sin() -> None:
   # Basic sinc plot
   w = 2* np.pi
@@ -27,21 +31,54 @@ def plot_cos() -> None:
 
 def plot_subplots() -> None :
     # Basic sinc subplots
-  w = 2* np.pi
   x_t = np.linspace(0, 1, 100)
   y_t = None
   plt.figure(figsize=(12,10))
   plt.style.use('seaborn-dark-palette')
 
-  for i in list(range(1, 5)):
+  for freq in list(range(1, 5)):
 
-    plt.subplot(2, 3, i)
-    y_t = np.sin(i * w * x_t)
-    plt.title('Increase of w by {0}'.format(i))
+    plt.subplot(2, 3, freq)
+    y_t = np.sin(freq * 2* np.pi * x_t)
+    plt.title('Increase of w by {0}'.format(freq))
     plt.plot(x_t, y_t)
     plt.xlabel('w/wo')
     plt.ylabel('Amplitude')
     plt.grid()
+  plt.show()
+
+# FFT
+def easy_dft() -> None:
+  parameters = {}
+  parameters['N'] = 300      # sec
+  parameters['fs'] = 1000.0    # 1 KHz
+  parameters['Ts'] = 1.0 / parameters.get('fs') # 1 ms sample
+  parameters['x_t'] = np.linspace(0, parameters.get('N') * parameters.get('Ts'), parameters.get('N') )
+  parameters['freq_component'] = 200e3 # 200K KHz
+  parameters['freq_component2'] = 50e3 # 200K KHz
+
+  parameters['y_t'] = np.sin(  parameters['freq_component'] * 2 * np.pi * parameters.get('x_t') )  # f * 2 * pi
+  # parameters['y_t']  +=  np.sin(  parameters['freq_component2'] * 2 * np.pi * parameters.get('x_t') )
+  parameters['y_f'] = scipy.fftpack.fft(parameters['y_t'])
+  parameters['x_f'] = np.linspace(0.0, parameters['fs'] / 2 , int(parameters['N'] / 2) )  # dc - fs / 2
+
+  plt.figure(figsize=(12,10))
+
+  plt.subplot(1,2, 1)
+  plt.plot(parameters['x_f'], np.abs( parameters['y_f'][ : int (parameters['N'] // 2)  ]))
+  plt.ylabel('strength')
+  plt.xlabel('w')
+
+  #TODO calculate phase
+  plt.subplot(1, 2, 2)
+  # plt.plot(parameters['x_f'], parameters['x_f'] /  np.tan ( parameters['y_f'][ : int (parameters['N'] // 2)  ]))
+  plt.ylabel('strength')
+  plt.xlabel('w')
+
+  # plt.subplot(2,2, 3)
+  # plt.plot(parameters['x_f'], np.abs( parameters['y_f'][ : int (parameters['N'] // 2)  ]))
+  # plt.ylabel('strength')
+  # plt.xlabel('w')
   plt.show()
 
 # 3D Plot
@@ -134,5 +171,5 @@ def map_projection(mode : int = 0, ) -> None :
   plt.show()
 
 if __name__ == '__main__':
-  map_projection(3)
+  easy_dft()
 
