@@ -85,6 +85,8 @@ import numpy as np
 from matplotlib import pyplot
 import random
 
+from numpy.ma.core import ids
+
 def identity (value):
   # returns the input (i.e. passthrough)
 
@@ -166,10 +168,12 @@ def plot_simple_example_map_perf(N):
   pyplot.show()
 
 
-'''Processes can communicate data between one another
+'''
+  Processes can communicate data between one another
     Queue class
 
   The following example uses multiprocessing Queue class to share data between processes
+
 '''
 
 def get_on_bus(q: mp.Queue, ids: List) -> None :
@@ -201,8 +205,9 @@ def get_off_bus(q: mp.Queue) -> None :
   while not q.empty():
     print( '{0} got off bus'.format(q.get()) )
 
-def ride_bus_queue_example():
-  # processes share queue adding riders to bus
+def ride_bus_queue_example() -> None :
+  # Parent and child process share queue: adding riders to bus(parent) and removing (child)
+  # The following example spawns one child at a time
 
   # Parameters:
   # None
@@ -211,12 +216,17 @@ def ride_bus_queue_example():
   # None
 
   seat_count = 10
-  q = mp.Queue(seat_count) # data
+  overload_factor = 100
+  q = mp.JoinableQueue(seat_count)  # Queue
+  passengers =  [i for i in range(overload_factor * 10)]
+  child_process = None
 
-  p1 = mp.Process(target = get_on_bus, args=(q,[i for i in range(seat_count)],)) # comma at the end
-  p1.start()
+  # main process adds riders
+  while passengers.__len__() > 0:
+    get_on_bus( q, passengers )
 
-  p2 = mp.Process(target = get_off_bus, args=(q,))
-  p2.start()
+    # subprocess offloads riders
+    child_process = mp.Process(target = get_off_bus, args=(q,))
+    child_process.start()
+    child_process.join()
 
-ride_bus_queue_example()
