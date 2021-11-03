@@ -78,31 +78,49 @@ Process Thread
 '''
 
 import multiprocessing as mp
+import os
 import time
+from typing import Iterable, List
 import numpy as np
 from matplotlib import pyplot
 import random
 
-def machine_info():
-  param = {
-    'cpu_count' : mp.cpu_count(),
-    'current_process' : mp.current_process()
-  }
-
 def identity (value):
+  # returns the input (i.e. passthrough)
+
+  # Parameters:
+  #   value (any)
+
+  # Returns
+  #   value (any)
+
   return value
 
 def simple_example_map() -> None:
+  #  Initializes workers pool and executes N(i.e. NUM_OF_SAMPLES) number of tasks
+
+  # Parameters:
+  #   None
+
+  # Returns
+  #   None
+
   NUM_OF_SAMPLES = 100
   pool = mp.Pool (processes = mp.cpu_count())
   pool.map(identity, list(range( int(NUM_OF_SAMPLES) )) ) # workers threads operate on function(i.e. identity)
 
 def plot_simple_example_map_perf(N):
+  #  Run preceding function N number of times, record the time to complete, and plot the time results (n vs time)
+
+  # Parameters:
+  #   N (int): Iteration count
+
+  # Returns
+  #   None
 
   pyplot.figure(figsize=(15,10))
   x = []
   y = []
-  avg = 1
 
   for i in range(N):
     t_start = time.time()
@@ -148,4 +166,57 @@ def plot_simple_example_map_perf(N):
   pyplot.show()
 
 
-plot_simple_example_map_perf(40)
+'''Processes can communicate data between one another
+    Queue class
+
+  The following example uses multiprocessing Queue class to share data between processes
+'''
+
+def get_on_bus(q: mp.Queue, ids: List) -> None :
+  # Load bus with people(ids) waiting
+
+  # Parameters:
+  #   q (Queue): container
+  #   ids : list of people symbolized by ID number
+
+  # Returns
+  #   None
+
+  id = None
+
+  while not q.full():
+    id = ids.pop()
+    q.put(id)
+    print('{0} entered bus\t waitline {1}'.format(id, str(ids) ) )
+
+def get_off_bus(q: mp.Queue) -> None :
+  # Empty bus if at least one person is on the bus
+
+  # Parameters:
+  #   q (Queue): container shared amongst processes
+
+  # Returns
+  #   None
+
+  while not q.empty():
+    print( '{0} got off bus'.format(q.get()) )
+
+def ride_bus_queue_example():
+  # processes share queue adding riders to bus
+
+  # Parameters:
+  # None
+
+  # Returns:
+  # None
+
+  seat_count = 10
+  q = mp.Queue(seat_count) # data
+
+  p1 = mp.Process(target = get_on_bus, args=(q,[i for i in range(seat_count)],)) # comma at the end
+  p1.start()
+
+  p2 = mp.Process(target = get_off_bus, args=(q,))
+  p2.start()
+
+ride_bus_queue_example()
