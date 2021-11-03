@@ -11,7 +11,7 @@ plt.style.use('seaborn-dark-palette')
 # 2D plots
 def plot_sin() -> None:
   # Basic sinc plot
-  w = 2* np.pi
+  w = 2 * np.pi
   x_t = np.linspace(0, 1, 100)
   y_t = np.sin(w * x_t)
   plt.plot( x_t, y_t, '*', label = 'sin wave')
@@ -30,14 +30,13 @@ def plot_cos() -> None:
   plt.show()
 
 def plot_subplots() -> None :
-    # Basic sinc subplots
+  # Basic sinc subplots
   x_t = np.linspace(0, 1, 100)
   y_t = None
   plt.figure(figsize=(12,10))
   plt.style.use('seaborn-dark-palette')
 
   for freq in list(range(1, 5)):
-
     plt.subplot(2, 3, freq)
     y_t = np.sin(freq * 2* np.pi * x_t)
     plt.title('Increase of w by {0}'.format(freq))
@@ -50,17 +49,15 @@ def plot_subplots() -> None :
 # FFT
 def easy_dft() -> None:
   parameters = {}
-  parameters['N'] = 300      # sec
+  parameters['N'] = 500      # samples
   parameters['fs'] = 1000.0    # 1 KHz
-  parameters['Ts'] = 1.0 / parameters.get('fs') # 1 ms sample
+  parameters['Ts'] = 1.0 / parameters.get('fs') # 1ms sample time
   parameters['x_t'] = np.linspace(0, parameters.get('N') * parameters.get('Ts'), parameters.get('N') )
   parameters['freq_component'] = 200e3 # 200K KHz
-  parameters['freq_component2'] = 50e3 # 200K KHz
-
+  parameters['freq_component2'] = 50e3 # 50K KHz
   parameters['y_t'] = np.sin(  parameters['freq_component'] * 2 * np.pi * parameters.get('x_t') )  # f * 2 * pi
-  # parameters['y_t']  +=  np.sin(  parameters['freq_component2'] * 2 * np.pi * parameters.get('x_t') )
   parameters['y_f'] = scipy.fftpack.fft(parameters['y_t'])
-  parameters['x_f'] = np.linspace(0.0, parameters['fs'] / 2 , int(parameters['N'] / 2) )  # dc - fs / 2
+  parameters['x_f'] = np.linspace(0.0001, parameters['fs'] / 2 , parameters['N'] // 2)   # dc - fs / 2
 
   plt.figure(figsize=(12,10))
 
@@ -69,16 +66,11 @@ def easy_dft() -> None:
   plt.ylabel('strength')
   plt.xlabel('w')
 
-  #TODO calculate phase
   plt.subplot(1, 2, 2)
-  # plt.plot(parameters['x_f'], parameters['x_f'] /  np.tan ( parameters['y_f'][ : int (parameters['N'] // 2)  ]))
+  plt.plot(parameters['x_f'], np.tan ( parameters['y_f'][ : parameters['N'] // 2 ] / parameters['x_f'] ))  # integer divide //
   plt.ylabel('strength')
   plt.xlabel('w')
-
-  # plt.subplot(2,2, 3)
-  # plt.plot(parameters['x_f'], np.abs( parameters['y_f'][ : int (parameters['N'] // 2)  ]))
-  # plt.ylabel('strength')
-  # plt.xlabel('w')
+  plt.ylim(-0.5, 0.5)
   plt.show()
 
 # 3D Plot
