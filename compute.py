@@ -78,14 +78,14 @@ Process Thread
 '''
 
 import multiprocessing as mp
-import os
 import time
+import os
+import random
+import array
+
 from typing import Iterable, List
 import numpy as np
 from matplotlib import pyplot
-import random
-
-from numpy.ma.core import ids
 
 def identity (value):
   # returns the input (i.e. passthrough)
@@ -167,12 +167,11 @@ def plot_simple_example_map_perf(N):
 
   pyplot.show()
 
-
 '''
   Processes can communicate data between one another
     Queue class
 
-  The following example uses multiprocessing Queue class to share data between processes
+  The following example uses multiprocessing Queue class to share data between processes (seperate programs sharing data)
 
 '''
 
@@ -202,6 +201,8 @@ def get_off_bus(q: mp.Queue) -> None :
   # Returns
   #   None
 
+  print('\t child Process: {0}'.format(mp.current_process()))
+
   while not q.empty():
     print( '{0} got off bus'.format(q.get()) )
 
@@ -228,5 +229,96 @@ def ride_bus_queue_example() -> None :
     # subprocess offloads riders
     child_process = mp.Process(target = get_off_bus, args=(q,))
     child_process.start()
-    child_process.join()
+    child_process.join() # worker empties queue
 
+''' '''
+
+def a_drive(q: mp.Queue) -> None:
+  obj = q.get()
+  obj['music'] = 'Country'
+  obj['passengers'] = 2
+  q.put(obj)
+
+def b_drive(q: mp.Queue) -> None:
+  obj = q.get()
+  obj['music'] = 'Alternative'
+  obj['passengers'] = 1
+  q.put(obj)
+
+def c_drive(q: mp.Queue) -> None:
+  obj = q.get()
+  obj['music'] = 'Rock'
+  obj['passengers'] = 3
+  q.put(obj)
+
+def car_example() -> None :
+  # Children share access to Parent's car
+
+  # Parameters:
+  # None
+
+  # Returns:
+  # None
+
+  car = {
+    'make': 'A3',
+    'model': 'Audi',
+    'year' : '2020',
+    'music': '',
+    'number_of_passengers': '',
+  }
+
+  q = mp.Queue(1)  # capacity = 1
+  q.put(car)  # add car to queue
+
+  print(car)
+
+  process_a = mp.Process(target = a_drive, args=(q,))
+  process_b = mp.Process(target = b_drive, args=(q,))
+  process_c = mp.Process(target = c_drive, args=(q,))
+
+  process_a.start()
+  process_b.start()
+  process_c.start()
+
+  # wait for children to complete
+  process_a.join()
+  process_b.join()
+  process_c.join()
+
+  # state of car
+  print(q.get())
+
+''' '''
+
+'''
+  Processes can communicate data between one another
+    Pipe class
+
+  The following example uses multiprocessing Queue class to share data between processes (seperate programs sharing data)
+
+'''
+
+def pipe_example () -> None :
+  msg = 'Bob The Builder'
+  ret = ''
+  arr_buffer = array.array( 'B', [0] * 10 )   #  type code (unsigned char) , initializer
+  producer , consumer = mp.Pipe()
+
+  producer.send(msg)
+  ret = consumer.recv()
+  print('rcvd  :\t{0}'.format(ret))
+
+  producer.send_bytes(msg.encode(), 1, 2) # encode to binary . offset, number of bytes read
+  ret = consumer.recv_bytes(20) # rcv maximum length of 20 bytes
+  print('rcvd truncated :\t {0}'.format(ret))
+  print(ret) # b'ob The Builder
+
+  producer.send_bytes(msg.encode(), 1, 2) # encode to binary . offset, number of bytes read
+  if consumer.poll(): # poll connection for data
+    ret = consumer.recv_bytes_into(arr_buffer)
+    print('rcvd size:\t {0}'.format(ret))
+
+  print(ret, arr_buffer) # 2 (number of bytes recv)
+
+pipe_example()

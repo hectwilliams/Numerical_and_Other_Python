@@ -5,6 +5,8 @@ from typing import Any
 
 from Inhertiance_Encapsulation_Polymorphism import SubClass, determinant
 
+import compute
+
 __all__ = [
   "Profiler"
 ]
@@ -131,4 +133,11 @@ class Profiler():
       expect = (test_obj.get('func_test_expect'))
       print (' {0}:\tcalculated {1}\t expect {2}\t Test passed: {3} \n'.format(i, sol,expect ,sol  ==  expect  )  )
 
-Profiler().test_sorts()
+  def test_interprocess(self):
+    start_time =  time.time_ns()
+    compute.car_example()
+    end_time  =  time.time_ns()
+    print('{2}\nFunctionName = test_interprocess \nTimeElapsed = {1} ms\n{2}'.format( None , ( end_time - start_time) / 10e6 , ("--"*100) + '\n' ))
+
+
+Profiler().test_interprocess()
