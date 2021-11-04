@@ -1,0 +1,27 @@
+version:  1
+formatters:
+  fmtBase:
+    format: '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
+  fmtConsole:
+    format: '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
+handlers:
+  fileHandler:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: fmtBase
+    filename: ./config/lazy_logger.py.log
+    mode: a
+  consoleHandler:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: fmtConsoles
+    stream: sys.stdout
+loggers:
+  lazy_logger.py:
+    level: DEBUG
+    handlers: [fileHandler]
+    propagate: no
+root:
+  level: DEBUG
+  handlers: [fileHandler]
+

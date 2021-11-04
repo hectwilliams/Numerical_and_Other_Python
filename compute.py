@@ -87,6 +87,9 @@ from typing import Iterable, List
 import numpy as np
 from matplotlib import pyplot
 
+import lazy_logger
+
+
 def identity (value):
   # returns the input (i.e. passthrough)
 
@@ -298,12 +301,13 @@ def car_example() -> None :
   The following example uses multiprocessing Queue class to share data between processes (seperate programs sharing data)
 
 '''
+logger = lazy_logger.lazy_logger()
 
 def pipe_example () -> None :
-  msg = 'Bob The Builder'
+  msg = 'BobwThe Builder'
   ret = ''
-  arr_buffer = array.array( 'B', [0] * 10 )   #  type code (unsigned char) , initializer
-  producer , consumer = mp.Pipe()
+  arr_buffer = np.array([0] * 10, dtype=bytes)
+  producer, consumer = mp.Pipe()
 
   producer.send(msg)
   ret = consumer.recv()
@@ -314,11 +318,11 @@ def pipe_example () -> None :
   print('rcvd truncated :\t {0}'.format(ret))
   print(ret) # b'ob The Builder
 
-  producer.send_bytes(msg.encode(), 1, 2) # encode to binary . offset, number of bytes read
+  producer.send_bytes(msg.encode(), 0, 4) # encode to binary . offset, number of bytes read
   if consumer.poll(): # poll connection for data
     ret = consumer.recv_bytes_into(arr_buffer)
     print('rcvd size:\t {0}'.format(ret))
-
-  print(ret, arr_buffer) # 2 (number of bytes recv)
+    print(arr_buffer.view() )   # view
+    logger.debug("Houston, we have a %s", "interesting problem")
 
 pipe_example()
