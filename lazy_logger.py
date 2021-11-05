@@ -24,18 +24,18 @@ lazy_logger()
 
 
 '''
-Brute Force approach
+  Brute Force approach
 
-# # Create Handler
-  # file_handler = logging.FileHandler( '{0}.log'.format(__file__), mode='a', encoding='utf-8',  delay= True)
-  # file_handler.setLevel(logging.DEBUG)
-  # file_handler.setFormatter( logging.Formatter('%(asctime)s - %(filename)s - %(levelname)s - %(message)s') )
-  # stream_handler = logging.StreamHandler(stream=None) # stderr
-  # stream_handler.setLevel(logging.WARNING)
-  # stream_handler.setFormatter( logging.Formatter('%(asctime)s - %(filename)s - %(levelname)s - %(message)s') )
-  # # Add handlers to logger
-  # logger.addHandler(file_handler)
-  # logger.addHandler(stream_handler)
+  # # Create Handler
+    # file_handler = logging.FileHandler( '{0}.log'.format(__file__), mode='a', encoding='utf-8',  delay= True)
+    # file_handler.setLevel(logging.DEBUG)
+    # file_handler.setFormatter( logging.Formatter('%(asctime)s - %(filename)s - %(levelname)s - %(message)s') )
+    # stream_handler = logging.StreamHandler(stream=None) # stderr
+    # stream_handler.setLevel(logging.WARNING)
+    # stream_handler.setFormatter( logging.Formatter('%(asctime)s - %(filename)s - %(levelname)s - %(message)s') )
+    # # Add handlers to logger
+    # logger.addHandler(file_handler)
+    # logger.addHandler(stream_handler)
 
 
 '''
