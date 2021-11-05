@@ -191,7 +191,7 @@ def wave_gen (mode: int = 0, N : int = 1024) -> dict:
     'y': param.get('y_out')
   }
 
-def easy_auto() -> None:
+def autocorrelation_example() -> None:
   # Compute autocorrelation and plot the result
 
   # Parameters:
@@ -350,5 +350,5 @@ def map_projection(mode : int = 0, ) -> None :
 
 
 if __name__ == '__main__':
-  easy_auto()
+  autocorrelation_example()
 
