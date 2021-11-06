@@ -7,6 +7,7 @@ import numpy as np
 from numpy.core.function_base import linspace
 import scipy.fftpack
 from numpy.core.fromnumeric import take
+from scipy.fftpack.pseudo_diffs import shift
 
 ''' :( 2D plots '''
 def plot_sin() -> None:
@@ -188,38 +189,6 @@ def easy_dft_example() -> None:
   plt.ylim(-0.5, 0.5)
   plt.show()
 
-def gen_fft(n: int, ts: float, y_t: np.ndarray, x_t: np.ndarray) -> None:
-  # generate fft using argument parameters
-
-  # Parameters:
-  #   n(int): number of samples
-  #   ts(float): sample period
-  #   y_t:  y-axis
-  #   x_t : x-axis
-
-  x_f = np.linspace(0.0001,  n * ts,  n )   #(int)(n / 2))
-  y_f = scipy.fftpack.fft( y_t )
-  x_f_centered,y_f_centered = ftt_center_origin(x_f , y_f )
-
-  plt.subplot(2,2,1)
-  plt.ylabel('y_t')
-  plt.xlabel('ts')
-  plt.title('Autocorrelation Data Sequence')
-  plt.plot(x_t, y_t, '-o', marker='o', linestyle='--')
-
-  plt.subplot(2,2,2)
-  plt.ylabel('y_t')
-  plt.xlabel('fs')
-  plt.title('Frequency Response')
-  plt.plot(x_f_centered, y_f_centered, '-o', marker='o', linestyle='--')
-
-  plt.subplot(2,2,3)
-  plt.ylabel('Phase')
-  plt.xlabel('fs')
-  plt.title('Phase Response')
-  plt.ylim(-20,20)
-  plt.plot( x_f_centered, np.tan(y_f_centered/ x_f_centered ) , '-o', marker='o', linestyle='--')
-
 def ftt_center_origin(x: np.ndarray, y: np.ndarray):
   # Reflect discrete spectrum about origin. The output's sequence size is doubled.
 
@@ -246,39 +215,6 @@ def ftt_center_origin(x: np.ndarray, y: np.ndarray):
 
   return [x_out, y_out]
 
-def wave_gen (mode: int = 0, N : int = 1024) -> dict:
-  # Generate sample waveform: swtiched by mode argument
-
-  # Parameters:s
-  #   mode(int): selectable waveform
-
-  # Returns:
-  #   {y: ndarray-type, x: ndarray-type} (dict) : 1024 sample waveform
-
-  param = {}
-  param['N'] =  1024
-
-  if mode == 0:
-    # square wave
-    param['x_out'] = np.linspace(0.001, param.get('N'), param.get('N'))
-    param['y_out'] = np.concatenate((np.zeros( 256), np.ones( 256) ,  np.zeros( 512 )))
-
-  if mode == 1:
-    # sine wave
-    param['fo'] = 8e2   # 800_Hz
-    param['fs'] = 2e3   # 2_kHz
-    param['Ts'] = 1.0 / param.get('fs') # 2_ms sample time
-    param['y_t'] = np.sin(  param['fo'] * 2 * np.pi * param.get('x_t') )  # f * 2 * pi
-    param['x_t'] = np.linspace(0, param.get('N') * param.get('Ts'), param.get('N') )
-
-    param['x_out'] = np.linspace(0.0001, param['fs'] / 2 , param['N'] // 2)   # dc to fs / 2
-    param['y_out'] = scipy.fftpack.fft(param['y_t'])
-
-  return {
-    'x': param.get('x_out'),
-    'y': param.get('y_out')
-  }
-
 def autocorrelation_example() -> None:
   # Compute autocorrelation and plot the result
 
@@ -288,22 +224,106 @@ def autocorrelation_example() -> None:
   # Returns:
   #   None
 
-  y_corr = None
-  data = wave_gen() # returns { x: x-axis samples, y: y-axis samples}
-  y_corr = np.zeros(data.get('x').size )
+  # square wave
+  N = 1024*2
+  T = 2
+  ts = T / N
+  x_t = np.arange(0, N, 1) # sequence of samplex indices
+  x_ts = x_t * ts # sequence of sample times
+  y_t = np.concatenate((np.zeros( int(N / 4) ), np.ones( int(N / 4) ) ,  np.zeros( int(N/2) )))
+  arr_shiftable_y = np.zeros(y_t.size)
+  y_time_corr = np.zeros(y_t.size )
+  y_corr = np.zeros(y_t.size )
+
+# add noise
+  np.random.seed(19680801)
+  noise = np.random.randn((x_t.size)) ** 2
 
   # convolution
-  for i in range( data.get('x').size  ) :
-    # shift vector
-    logical_right_shift_by_i = np.concatenate(  (np.zeros(i),data.get('y')[0 : data.get('y').size - i])  )
-    # 1024 parralel multiply
-    # correlation sum
-    correl = sum (np.multiply(data.get('y'), logical_right_shift_by_i))
-    y_corr[i] = correl
+  for i in range( y_t.size  ) :
 
-  gen_fft(n = y_corr.size, ts= (data.get('x')[1] - data.get('x')[0]) , y_t = y_corr, x_t = data.get('x'),  fs_div=4)
+    # Time Convolution #
+    # right shift array by size
+    for k in range(arr_shiftable_y.size - 1, 0, -1):
+      arr_shiftable_y[k] = arr_shiftable_y[k - 1]
+    # insert new value to front of array
+    arr_shiftable_y[0] = y_t[i]
+    # 1024 parralel multiply # correlation sum
+    correl = sum (np.multiply(y_t, arr_shiftable_y))
+    y_time_corr[i] = correl
+
+    # Correlation #
+    zeros_N = np.zeros(N)
+    y_shifted_y_t =  np.concatenate( (zeros_N[0 :  i] , y_t[ 0: N - i  ]) )
+    y_corr[i] = np.sum (  np.multiply(y_shifted_y_t, y_t) )
+
+  # add noise
+  y_t_noise = y_t * noise
+
+  #plot
+  fig, ax = plt.subplots(constrained_layout=True)
+
+  plotRow = 4
+  plotCols = 2
+
+  plt.subplot(plotRow, plotCols,1)
+  plt.ylabel('y_t')
+  plt.xlabel('ts')
+  plt.title('Src')
+  plt.plot( x_t , y_t, '-o', marker='o', linestyle='--')
+
+  plt.subplot(plotRow,plotCols,2)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title('Spectrum')
+  plt.xlim(0,int(N / 2))
+  plt.semilogy(x_t , abs(scipy.fftpack.fft(y_t)), )
+
+  plt.subplot(plotRow,plotCols,3)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title('Src')
+  plt.plot(x_t , y_t_noise, '-o', marker='o', linestyle='--')
+
+  plt.subplot(plotRow,plotCols,4)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title('Src + Noise Spectrum')
+  plt.xlim(0,int(N / 2))
+  plt.semilogy(x_t , abs(scipy.fftpack.fft(y_t_noise)), )
+  plt.gca().twinx() # secondary y axis
+
+  plt.subplot(plotRow,plotCols,5)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title('Time Autocorrelation')
+  plt.plot(x_t , y_time_corr, '-o', marker='o', linestyle='--')
+
+  plt.subplot(plotRow,plotCols,6)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title('Spectrum')
+  plt.xlim(0,int(N / 2))
+  plt.semilogy(x_t , abs(scipy.fftpack.fft(y_time_corr)), )
+
+  plt.subplot(plotRow,plotCols,7)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title(' Autocorrelation')
+  plt.plot(x_t , y_corr, '-o', marker='o', linestyle='--')
+
+  plt.subplot(plotRow,plotCols,8)
+  plt.ylabel('y_t')
+  plt.xlabel('shift')
+  plt.title('Spectrum')
+  plt.xlim(0,int(N / 2))
+  plt.semilogy(x_t , abs(scipy.fftpack.fft(y_corr)), )
+
+  fig.tight_layout(pad=1.0)
+  plt.show()
 
 def freq_shift_example() -> None:
+  fig = plt.figure(figsize=(18, 8 )) # 12 inches width 4 inches height
   # Example of frequency shift
   N = 1024
   T = 2
@@ -326,8 +346,8 @@ def freq_shift_example() -> None:
   plt.subplot(3,2,1)
   plt.xlabel('')
   plt.ylabel('')
-  plt.title(' 1 Symbol Per Second ', fontsize=8)
-  plt.plot(x_t, y_t)
+  plt.title(' 1 Symbol Per Second (N = 1024) ', fontsize=8)
+  plt.plot(x_t, y_t, marker= 'x')
 
   plt.subplot(3,2,2)
   plt.ylabel('strength')
@@ -359,5 +379,5 @@ def freq_shift_example() -> None:
   return
 
 if __name__ == '__main__':
-  freq_shift_example()
+  autocorrelation_example()
 

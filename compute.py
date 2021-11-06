@@ -323,6 +323,5 @@ def pipe_example () -> None :
     ret = consumer.recv_bytes_into(arr_buffer)
     print('rcvd size:\t {0}'.format(ret))
     print(arr_buffer.view() )   # view
-    logger.debug("Houston, we have a %s", "interesting problem")
 
 pipe_example()
