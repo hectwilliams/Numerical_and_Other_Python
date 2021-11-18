@@ -646,6 +646,48 @@ def semaphore_example() -> None:
   thrd.Thread(target=sem_consumer_01, args=(sem, obj)).start()
   thrd.Thread(target=sem_consumer_02, args=(sem, obj)).start()
 
+def event_producer(*args):
+  # sends/receives message(s) and stores transaction data in table
 
-semaphore_example()
+  # Parameters
+  # args (tuple)
+  #   table - shared with caller thread storing raw timestamp information about messages
+
+  # Returns
+  # None
+
+  table = [] # {timestamp sent, timestamp rcvd, tx_data}
+
+def event_consumer(*args):
+  # receives message and sends ack message
+
+  # Parameters
+  # None
+
+  # Returns
+  # Nonne
+  pass
+
+def events_example() -> None:
+  # example using event objects to communicate between threads
+  # producer will send a message
+  # consumer will accept the message
+  # consumer acks the message
+  # producer removes pending notice from array
+  #   producer will clear pending ack after 2000 iterations
+
+  # Parameters
+  # None
+
+  # Returns
+  # None
+
+  table = []
+  producer = thrd.Thread(target=event_producer, args=(table), kwargs={})
+  consumer = thrd.Thread(target=event_consumer, args=(), kwargs={})
+
+  producer.start()
+  consumer.start()
+
+events_example()
 
