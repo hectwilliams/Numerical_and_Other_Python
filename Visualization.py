@@ -183,7 +183,7 @@ def easy_dft_example() -> None:
   plt.ylabel('strength')
   plt.xlabel('w')
   plt.subplot(1, 2, 2)
-  plt.plot(parameters['x_f'], np.tan ( parameters['y_f'][ : parameters['N'] // 2 ] / parameters['x_f'] ))
+  plt.plot(parameters['x_f'], np.tan ( np.imag(parameters['y_f'][ : parameters['N'] // 2 ]) / np.real( parameters['x_f']    )))
   plt.ylabel('strength')
   plt.xlabel('w')
   plt.ylim(-0.5, 0.5)
@@ -379,5 +379,4 @@ def freq_shift_example() -> None:
   return
 
 if __name__ == '__main__':
-  autocorrelation_example()
-
+  easy_dft_example()
