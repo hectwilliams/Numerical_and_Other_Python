@@ -336,6 +336,9 @@ def thread_hello_1(*args: tuple, **kwargs: object):
     time.sleep(1.0)
     print("\thi my name is wolverine", args , kwargs)
 
+'''
+  Threads live within processes. Mutiple threads can run per process sharing resources to execute tasks
+'''
 def thread_example():
   # basic example of threads: two functions competing for resources in order print hello and their name
 
@@ -510,7 +513,7 @@ def house(*args, **kwargs):
       print('HOUSE-OWNER: someone robbed my home!')
       if house['saw_something'] :
         print('HOUSE-OWNER: I think I see someone is still there !')
-        cond_lck.wait()
+        cond_lck.wait() # thief 2 thread should call notify after wait, else the system will pause!!
         print('HOUSE-OWNER: Calling 911')
         police = thrd.Thread(target=police_call, args=args, kwargs=kwargs)  # yay rlock !
         police.start()
@@ -541,7 +544,6 @@ def thief_01(*args, **kwargs):
     # Note: contextual 'with' block calls require upon entering block. Conditional lock is not freed until thread calls notify()
     cond_lck.notify() # release conditional lock from wait (i.e. wake up sleeping thread)
     for i in range(2):
-      time.sleep(1)
       house['removed_cnt'] = house.get('removed_cnt') + 1
       print('THIEF_01: stole items from house')
     print('THIEF_01: escaped to car')
@@ -561,11 +563,11 @@ def thief_02(*args, **kwargs):
 
   cond_lck = args[0]
   house = args[1]
+  counter = 0
 
   with cond_lck:
     cond_lck.notify() # release conditional lock from wait (i.e. wake up sleeping thread)
     for i in range(3):
-      time.sleep(2)
       house['removed_cnt'] = house.get('removed_cnt') + 1
       print('THIEF_02: stole items from house')
     print('THIEF_02: escaped to car')
@@ -583,7 +585,6 @@ def cond_example() -> None:
     'removed_cnt': 0,   # items stolen
     'saw_something': False  # house owner see someone
   }
-
   lck = thrd.Condition()
   house_ = thrd.Thread(target=house, args=(lck, house_obj), kwargs={})
   person_01 = thrd.Thread(target=thief_01, args=(lck, house_obj), kwargs={})
@@ -594,5 +595,57 @@ def cond_example() -> None:
   person_02.start()
   person_02.join()
 
-cond_example()
+def sem_producer(*args):
+  mutex = args[0]
+  data = args[1]
+
+  print()
+  while 1:
+    mutex.acquire()
+    data['num_of_elements'] = data.get('num_of_elements') + random.randint(1,10)
+    mutex.release()
+    print('\t producer adds element:  {0} '.format( data.get('num_of_elements') ))
+    time.sleep(1)
+
+def sem_consumer_01(*args):
+  mutex = args[0]
+  data = args[1]
+
+  while 1:
+    mutex.acquire()
+    if data.get('num_of_elements') != 0:
+      data['num_of_elements'] = data.get('num_of_elements') - 1
+    mutex.release()
+    print('\t 1 consumes element: {0} '.format( data.get('num_of_elements') ))
+    time.sleep(1)
+
+def sem_consumer_02(*args):
+  mutex = args[0]
+  data = args[1]
+
+  while 1:
+    mutex.acquire()
+    if data.get('num_of_elements') != 0:
+      data['num_of_elements'] = data.get('num_of_elements') - 1
+    mutex.release()
+    print('\t 2 consumes element:  {0} '.format( data.get('num_of_elements') ))
+    time.sleep(1)
+
+def semaphore_example() -> None:
+  # semaphore example
+
+  # Parameters
+  # None
+
+  # Returns
+  # None
+
+  sem = thrd.Semaphore()
+  obj = {'num_of_elements': 0}
+  thrd.Thread(target=sem_producer, args=(sem, obj)).start()
+  thrd.Thread(target=sem_consumer_01, args=(sem, obj)).start()
+  thrd.Thread(target=sem_consumer_02, args=(sem, obj)).start()
+
+
+semaphore_example()
 
