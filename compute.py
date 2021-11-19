@@ -698,7 +698,8 @@ def event_consumer(*args):
 
   # Parameters
   # args (tuple)
-  #   (event, queue)
+  #   event
+  #   queue
 
   # Returns
   # None
@@ -734,13 +735,12 @@ def events_example() -> None:
   # example using event objects to communicate between threads
   # producer will send a message
   # consumer will accept the message
-  # consumer acks the message
-  # producer removes pending notice from array
-  #   producer will clear pending ack after 2000 iterations
+  # producer waits for consumer to complete task and send a ack message
 
   # Parameters
   # args (tuple)
-  #   (event, array)
+  #   event
+  #   queue
 
   # Returns
   # None
@@ -753,5 +753,46 @@ def events_example() -> None:
   producer.start()
   consumer.start()
 
+def barrier_01(*args):
+  id = 'temp-001'
+  barrier = args[0]
 
-events_example()
+  try:
+    id = barrier.wait()
+    print('{0} entered party'.format(id) )
+  except thrd.BrokenBarrierError:
+    print('Error: {0} unable to enter party'.format(id))
+    print(barrier.n_waiting)
+
+def barrier_02(*args):
+  id = 'temp-002'
+  barrier = args[0]
+  barrier.reset() # disrupt chain for remaining parties causing a runtime error
+
+  try:
+    id = barrier.wait()
+    print('{0} entered party'.format(id) )
+  except thrd.BrokenBarrierError:
+    print('Error: {0} unable to enter party'.format(id))
+
+def barrier_pre_msg():
+  print('number people waiting to enter party')
+  time.sleep(1)
+
+def barrier_example() -> None:
+  # example ...
+
+  # Parameters
+  # None
+
+  # Return
+  # None
+
+  b = thrd.Barrier(2, action=barrier_pre_msg)
+
+  thrd.Thread( target=barrier_01, args=(b,) ).start()
+  thrd.Thread( target=barrier_02, args=(b,) ).start()
+
+
+barrier_example()
+
