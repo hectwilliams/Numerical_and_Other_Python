@@ -78,6 +78,7 @@ Process Thread
 '''
 import threading as thrd
 import multiprocessing as mp
+import queue
 import time
 import os
 import random
@@ -651,22 +652,83 @@ def event_producer(*args):
 
   # Parameters
   # args (tuple)
-  #   table - shared with caller thread storing raw timestamp information about messages
+  #   event object
+  #   queue_ - shared with caller thread storing raw timestamp information about messages
 
   # Returns
   # None
 
-  table = [] # {timestamp sent, timestamp rcvd, tx_data}
+  event = args[0]
+  queue_lifo = args[1]
+  cnt = 0
+  N = 3
+
+  while cnt < N :
+    if event.is_set() == False:
+      # send message
+      data = {'tx_t': 0, 'rx_t': 0}
+      data['tx_t'] = time.strftime('%Y-%m-%d %I:%M:%S')
+      data['tx_t_'] = time.time_ns()
+
+      queue_lifo.put(data)
+
+      # wait for ack
+      event.wait()
+
+      # retreive rcvd message
+      data = queue_lifo.get()
+
+      # print message
+      print('transaction {0}'.format(data))
+
+      cnt += 1
+      time.sleep(random.random() * 2)
+
+      # clear internal flag
+      event.clear()
+
+  queue_lifo.put({'kill': 1})
+  event.wait()
+
+  if queue_lifo.empty():
+    print('data stream cleared...closing... .. .')
 
 def event_consumer(*args):
   # receives message and sends ack message
 
   # Parameters
-  # None
+  # args (tuple)
+  #   (event, queue)
 
   # Returns
-  # Nonne
-  pass
+  # None
+
+  event = args[0]
+  queue_lifo = args[1]
+  data = None
+  watchdog = 0
+
+  while True:
+    # message rcvd
+    if event.is_set() == False:
+      # get msg
+      data = queue_lifo.get()
+      # check for 'kill' key
+      if 'kill' in data:
+        event.set() # ack kill command
+        break
+      #update message
+      data['rx_t'] = time.strftime('%Y-%m-%d %I:%M:%S')
+      data['rx_t_'] = time.time_ns()
+
+      #put item into into lifo
+      queue_lifo.put(data)
+      # ack message by setting event flag to true
+      event.set()
+    else :
+      watchdog += 1
+      print('waiting ... ')
+    time.sleep(1)
 
 def events_example() -> None:
   # example using event objects to communicate between threads
@@ -677,17 +739,19 @@ def events_example() -> None:
   #   producer will clear pending ack after 2000 iterations
 
   # Parameters
-  # None
+  # args (tuple)
+  #   (event, array)
 
   # Returns
   # None
 
-  table = []
-  producer = thrd.Thread(target=event_producer, args=(table), kwargs={})
-  consumer = thrd.Thread(target=event_consumer, args=(), kwargs={})
+  q = queue.LifoQueue() # {timestamp sent, timestamp rcvd, tx_data}
+  event = thrd.Event()
+  producer = thrd.Thread(target=event_producer, args=(event, q), kwargs={})
+  consumer = thrd.Thread(target=event_consumer, args=(event, q), kwargs={})
 
   producer.start()
   consumer.start()
 
-events_example()
 
+events_example()
